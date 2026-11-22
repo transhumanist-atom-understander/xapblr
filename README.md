@@ -23,15 +23,38 @@ cd xapblr
 makepkg -is
 ```
 
-#### Otherwise
-Clone the repository manually and build it as a Python package:
+#### Otherwise, with `uv`
+The Xapian Python bindings are not available from PyPI, so install them from your distribution first
+(`python-xapian` on Arch, `python3-xapian` on Debian/Ubuntu, `python3-xapian` on Fedora).
+Then create a virtual environment that can see them and install `xapblr` into it:
 ```sh
-    cd xapblr
-    uv build
-    python -m installer dist/*.whl
-    sudo cp -t /etc/uwsgi config/uwsgi/xapblr.ini
+uv venv --system-site-packages --python /usr/bin/python3 ~/.local/share/xapblr/venv
+uv pip install --python ~/.local/share/xapblr/venv \
+    git+https://github.com/transhumanist-atom-understander/xapblr
+ln -s ~/.local/share/xapblr/venv/bin/xapblr ~/.local/bin/xapblr
 ```
-The last step is so `uwsgi` can find `xapblr`'s web interface.
+`--python /usr/bin/python3` must be the interpreter your distribution's Xapian bindings were built for.
+(`uv tool install` is not suitable because it cannot give the environment access to system packages.)
+
+The base install covers indexing, searching, listing and rebuilding.
+Optional features are available as extras:
+
+| Extra           | Enables                                        |
+|-----------------|------------------------------------------------|
+| `web`           | the web interface (`flask`, `flask-assets`)    |
+| `clip`          | the CLIP captioning agent (`pillow`, `open-clip-torch`) |
+| `humanfriendly` | nicer relative timestamps in messages          |
+| `all`           | all of the above                               |
+
+E.g. `uv pip install --python ~/.local/share/xapblr/venv "xapblr[web] @ git+https://github.com/transhumanist-atom-understander/xapblr"`.
+
+To work on `xapblr` from a checkout, `uv venv --system-site-packages --python /usr/bin/python3`, then `uv sync --all-extras`.
+
+If you use the web interface under `uwsgi`, also install `uwsgi` and its Python plugin from your distribution and run
+```sh
+sudo cp -t /etc/uwsgi config/uwsgi/xapblr.ini
+```
+so `uwsgi` can find `xapblr`'s web interface.
 
 ## Configuration and initialisation
 
@@ -69,6 +92,7 @@ for hourly and daily re-indexing, respectively.
 
 ## Web interface
 
+This requires the `web` extra, and the `sass` and `pandoc` executables.
 More convenient than the command line is the web interface.
 Launch it with
 ```sh
@@ -110,9 +134,9 @@ To enable captioning, first configure an authentication token and a server profi
     ...
 }
 ```
-Then install Open CLIP and launch a captioning agent
+Then install the `clip` extra (which pulls in Open CLIP) and launch a captioning agent
 ```sh
-pip install open-clip-torch
+uv pip install --python ~/.local/share/xapblr/venv "xapblr[clip] @ git+https://github.com/transhumanist-atom-understander/xapblr"
 xapblr clip localhost
 ```
 The agent will loop fetching a batch of tasks from `http://localhost:5000/clip`, trying to caption them with Open CLIP, and submitting the results back to the server.
@@ -158,14 +182,14 @@ posts that you know have been edited on Tumblr, pass suitable options to
 `xapblr index`.
 
 ## Dependencies: ##
- * Python 3 and
+ * Python >= 3.11 and
+ * * `xapian` Python bindings (from your distribution; not on PyPI)
  * * `pytumblr2`
- * * `xapian`
  * * `dateparser`
- * * `flask` and `flask-assets` (for the web interface)
- * * `sqlalchemy>=2.0`
- * * `open-clip-torch` (optional, to generate and index captions for images)
-   * `humanfriendly` (optional, for some nicer log messages)
- * `uwsgi` (for the web interface)
- * `sass`
- * `pandoc`
+ * * `requests`
+ * * `sqlalchemy>=1.4`
+ * * `flask` and `flask-assets` (optional, `web` extra, for the web interface)
+ * * `pillow` and `open-clip-torch` (optional, `clip` extra, to generate and index captions for images)
+ * * `humanfriendly` (optional, `humanfriendly` extra, for some nicer log messages)
+ * `uwsgi` (optional, to serve the web interface)
+ * `sass` and `pandoc` (optional, for the web interface)

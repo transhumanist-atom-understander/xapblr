@@ -1,5 +1,4 @@
 from asyncio import gather, run, to_thread
-from PIL import Image
 from queue import Queue
 import requests
 from requests.exceptions import JSONDecodeError, RequestException
@@ -14,7 +13,10 @@ from .config import config
 
 class Captioner:
     def __init__(self):
+        from PIL import Image
         import torch
+
+        self.Image = Image
 
         self.torch = torch
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -98,7 +100,7 @@ class Captioner:
             print(f"Done: {t['caption']} ({dt_ms} ms).", flush=True)
 
     def preprocess(self, p):
-        im = Image.open(p).convert("RGB")
+        im = self.Image.open(p).convert("RGB")
         im = self.transform(im).unsqueeze(0)
         im = im.to(self.device)
         return im
@@ -155,7 +157,13 @@ def clip_cmd(args):
 
     start = time()
     print("Launching CLIP agent... ", end="", flush=True)
-    cptnr = Captioner()
+    try:
+        cptnr = Captioner()
+    except ModuleNotFoundError as e:
+        exit(
+            f"xapblr: module {e.name} is required for CLIP captioning; "
+            "install xapblr with the 'clip' extra."
+        )
     dt = time() - start
     print(f"Loaded model onto GPU in {dt:.2f} s.")
 

@@ -7,23 +7,44 @@ authors = [
 description = "Locally index a tumblr blog with xapian for searching."
 readme = "README.md"
 license = { file="LICENSE" }
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+# The xapian Python bindings are also required, but they are not available
+# from PyPI and must come from your distribution; see README.md.
 dependencies = [
     "sqlalchemy>=1.4",
     "pytumblr2",
-    "flask",
-    "flask-assets",
     "dateparser",
     "requests",
-    "pillow",
-    "xapian-bindings",
-    "versioningit",
 ]
+
+[project.optional-dependencies]
+# Web interface (`xapblr server`). Also needs the `sass` and `pandoc`
+# executables; running it under uwsgi needs a system uwsgi with its python
+# plugin (see config/uwsgi/xapblr.ini).
+web = [
+    "flask",
+    "flask-assets",
+]
+# CLIP captioning agent (`xapblr clip`)
+clip = [
+    "pillow",
+    "open-clip-torch",
+]
+# Nicer human-readable timestamps in log messages and listings
+humanfriendly = [
+    "humanfriendly",
+]
+all = [
+    "xapblr[web,clip,humanfriendly]",
+]
+
+[tool.uv.sources]
+pytumblr2 = { git = "https://github.com/transhumanist-atom-understander/pytumblr2", branch = "master" }
 
 [build-system]
 
@@ -34,7 +55,15 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 
+[tool.setuptools.package-data]
+xapblr = ["config.json"]
+xapblr_web = ["static/*", "templates/*"]
+
 [tool.versioningit]
+# Used when no version tag is reachable (e.g. a fork without tags).
+default-version = "0.2.1"
+
+[tool.versioningit.vcs]
 method = "git"
 
 [project.scripts]

@@ -15,6 +15,7 @@ class Database:
                 f"Database file {db_path} does not exist. Creating and populating... ",
                 end="",
             )
+            db_path.parent.mkdir(parents=True, exist_ok=True)
             Base.metadata.create_all(self.engine)
             print("Done.")
 

@@ -10,4 +10,7 @@ except ModuleNotFoundError as e:
     def server(args):
         from sys import exit
 
-        exit(f"xapblr: module {missing_module} is required for the web interface.")
+        exit(
+            f"xapblr: module {missing_module} is required for the web interface; "
+            "install xapblr with the 'web' extra."
+        )
