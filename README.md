@@ -24,17 +24,14 @@ makepkg -is
 ```
 
 #### Otherwise, with `uv`
-The Xapian Python bindings are not available from PyPI, so install them from your distribution first
-(`python-xapian` on Arch, `python3-xapian` on Debian/Ubuntu, `python3-xapian` on Fedora).
-Then create a virtual environment that can see them and install `xapblr` into it:
+The Xapian Python bindings are built from source during installation, so you need
+`xapian-core` (including its headers and `xapian-config`) and a C++ compiler first:
+`xapian-core` on Arch, `libxapian-dev` on Debian/Ubuntu, `xapian-core-devel` on Fedora.
+Then:
 ```sh
-uv venv --system-site-packages --python /usr/bin/python3 ~/.local/share/xapblr/venv
-uv pip install --python ~/.local/share/xapblr/venv \
-    git+https://github.com/transhumanist-atom-understander/xapblr
-ln -s ~/.local/share/xapblr/venv/bin/xapblr ~/.local/bin/xapblr
+uv tool install git+https://github.com/transhumanist-atom-understander/xapblr
 ```
-`--python /usr/bin/python3` must be the interpreter your distribution's Xapian bindings were built for.
-(`uv tool install` is not suitable because it cannot give the environment access to system packages.)
+This takes a minute or so while the bindings compile.
 
 The base install covers indexing, searching, listing and rebuilding.
 Optional features are available as extras:
@@ -46,9 +43,9 @@ Optional features are available as extras:
 | `humanfriendly` | nicer relative timestamps in messages          |
 | `all`           | all of the above                               |
 
-E.g. `uv pip install --python ~/.local/share/xapblr/venv "xapblr[web] @ git+https://github.com/transhumanist-atom-understander/xapblr"`.
+E.g. `uv tool install "xapblr[web] @ git+https://github.com/transhumanist-atom-understander/xapblr"`.
 
-To work on `xapblr` from a checkout, `uv venv --system-site-packages --python /usr/bin/python3`, then `uv sync --all-extras`.
+To work on `xapblr` from a checkout, run `uv sync` (add `--all-extras` for the optional features).
 
 If you use the web interface under `uwsgi`, also install `uwsgi` and its Python plugin from your distribution and run
 ```sh
@@ -136,7 +133,7 @@ To enable captioning, first configure an authentication token and a server profi
 ```
 Then install the `clip` extra (which pulls in Open CLIP) and launch a captioning agent
 ```sh
-uv pip install --python ~/.local/share/xapblr/venv "xapblr[clip] @ git+https://github.com/transhumanist-atom-understander/xapblr"
+uv tool install "xapblr[clip] @ git+https://github.com/transhumanist-atom-understander/xapblr"
 xapblr clip localhost
 ```
 The agent will loop fetching a batch of tasks from `http://localhost:5000/clip`, trying to caption them with Open CLIP, and submitting the results back to the server.
@@ -183,7 +180,7 @@ posts that you know have been edited on Tumblr, pass suitable options to
 
 ## Dependencies: ##
  * Python >= 3.11 and
- * * `xapian` Python bindings (from your distribution; not on PyPI)
+ * * `xapian-bindings` (built from source against `xapian-core`)
  * * `pytumblr2`
  * * `dateparser`
  * * `requests`

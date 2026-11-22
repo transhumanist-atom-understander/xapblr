@@ -13,13 +13,14 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-# The xapian Python bindings are also required, but they are not available
-# from PyPI and must come from your distribution; see README.md.
+# xapian-bindings builds the bindings from source at install time: it needs
+# xapian-core (with its headers and xapian-config) and a C++ compiler.
 dependencies = [
     "sqlalchemy>=1.4",
     "pytumblr2",
     "dateparser",
     "requests",
+    "xapian-bindings",
 ]
 
 [project.optional-dependencies]
